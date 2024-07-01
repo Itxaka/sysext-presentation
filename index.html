@@ -49,14 +49,6 @@
 					<section>Basically a raw image that contain files and directories similar in fashion to regular operating system tree. When one or more system extension images are activated, their /usr/ hierarchies are combined via "overlayfs" with the same hierarchies of the host OS, and the host /usr/ overmounted with it ("merging")</section>
 				</section>
 				<section>
-					<section>Building sysextensions</section>
-					<section>Out of scope of this presentation, see <a href="https://kairos.io/docs/advanced/sys-extensions/#building-system-extensions">Building sysextensions</a> on Kairos docs</section>
-				</section>
-				<section>
-					<section>Verity + signed? what?</section>
-					<section>Quick simplified explanation: signed hash of the contents + signed partition. Allows to verify that partition was not modified since the creation of it.</section>
-					<section>Out of scope, see <a href="https://uapi-group.org/specifications/specs/discoverable_partitions_specification/#verity">DDI specification</a> and <a href="https://source.android.com/docs/security/features/verifiedboot/dm-verity">dm-verity docs</a> </section>				</section>
-				<section>
 					<section> How do I use it?</section>
 						<section>
 							<a href="https://kairos.io/docs/advanced/sys-extensions/#building-system-extensions">Build a sysextension</a>
@@ -76,11 +68,24 @@
 						<section>
 							<img src="dist/buiding-iso.gif">
 						</section>
-						<section>Agent will copy it for active+passive entries</section>
-						<section>Immucore will verify it on boot and enable if signature matches</section>
-						<section>Systemd-sysext service will start and merge the extensions</section>
-
 					</section>
+				<section>
+					<section>
+						What can be done with this?
+					</section>
+					<section>
+						Move a core image (no k3s) to have k3s, no rebuild or reinstall needed
+						<video data-autoplay src="dist/k3s-core.mp4"></video>
+					</section>
+					<section>
+						Move from k3s 1.29 to 1.30 with a single reboot
+						<video data-autoplay src="dist/k3s-v1.29-to-1.30.mp4"></video>
+					</section>
+					<section>
+						Play DOOM ?
+						<video data-autoplay src="dist/doom.mp4"></video>
+					</section>
+				</section>
 				<section>
 					<section>Known issues/limitations</section>
 					<section>
@@ -141,26 +146,6 @@
 							 *     v    123a-1
 							 *  (newer) 124-1
   						</code></pre>
-					</section>
-				</section>
-				<section>
-					<section>
-						Extra stuff
-					</section>
-					<section>
-						Extensions can be added and removed manually. They are stored in the EFI partition (fat filesystem) so manual
-						managing of them can be done at any time. See <a href="https://kairos.io/docs/advanced/sys-extensions/#adding-system-extensions-to-the-installed-system">Kairos docs</a> for more info.
-					</section>
-					<section>
-						Nothing planned for managing those sysextension via kairos-agent. No download or managing of existing ones are planned yet.
-					</section>
-					<section>
-						Broken/unsigned sysextensions are still on the EFI partition, they just dont get copied and activated during runtime.
-						There are warning on immucore logs about this but nothing planned with them, no removal done of those.
-					</section>
-					<section>
-						On systemd 256, we will be able to make extension hierarchies mutable with a series of different ways.
-						This falls more in line with our current status of having /usr/local being mutable and persistent but we still need planning around it
 					</section>
 				</section>
 				<section>

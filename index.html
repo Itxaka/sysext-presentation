@@ -57,14 +57,30 @@
 					<section>Quick simplified explanation: signed hash of the contents + signed partition. Allows to verify that partition was not modified since the creation of it.</section>
 					<section>Out of scope, see <a href="https://uapi-group.org/specifications/specs/discoverable_partitions_specification/#verity">DDI specification</a> and <a href="https://source.android.com/docs/security/features/verifiedboot/dm-verity">dm-verity docs</a> </section>				</section>
 				<section>
-					<section> How do I use it?
-						<p class="fragment"><a href="https://kairos.io/docs/advanced/sys-extensions/#building-system-extensions">Build a sysextension</a> </p>
-						<p class="fragment"><a href="https://kairos.io/docs/installation/trustedboot/#bundling-system-extensions-during-the-installable-medium-build">Add it to the installer iso</a></p>
-						<p class="fragment">Agent will copy it for active+passive entries</p>
-						<p class="fragment">Immucore will verify it on boot and enable if signature matches</p>
-						<p class="fragment">Systemd-sysext service will start and merge the extensions</p>
+					<section> How do I use it?</section>
+						<section>
+							<a href="https://kairos.io/docs/advanced/sys-extensions/#building-system-extensions">Build a sysextension</a>
+						</section>
+						<section data-background-iframe="https://kairos.io/docs/advanced/sys-extensions/#building-system-extensions"
+								 data-background-interactive>
+						</section>
+						<section>
+							<img src="dist/sysext-create.gif">
+						</section>
+						<section>
+							<a href="https://kairos.io/docs/installation/trustedboot/#bundling-system-extensions-during-the-installable-medium-build">Add it to the installer iso</a>
+						</section>
+						<section data-background-iframe="https://kairos.io/docs/installation/trustedboot/#bundling-system-extensions-during-the-installable-medium-build"
+								 data-background-interactive>
+						</section>
+						<section>
+							<img src="dist/buiding-iso.gif">
+						</section>
+						<section>Agent will copy it for active+passive entries</section>
+						<section>Immucore will verify it on boot and enable if signature matches</section>
+						<section>Systemd-sysext service will start and merge the extensions</section>
+
 					</section>
-				</section>
 				<section>
 					<section>Known issues/limitations</section>
 					<section>

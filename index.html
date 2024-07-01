@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Kairos system extensions</title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/moon.css">
+		<link rel="stylesheet" href="dist/custom.css">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section><h2>Extending UKI systems with sysextensions securely</h2></section>
+				<section>
+					<h1><a style="color:red">Warning!</a></h1>
+					<br>
+					This is a preview feature!
+					<br>
+					Available on 3.1.x but with no guarantees of it working as expected or promises about it not changing in the future
+					<br>
+					We are looking for feedback, suggestions, feature requests, questions!
+				</section>
+				<section>
+					<section>Current UKI problem and how sysextensions can provide solutions</section>
+					<section>
+						Limited size of EFI files on some firmwares, we need to keep base image as small as possible.
+						<p class="fragment"><a style="color:red">This limits what can be shipped on a single EFI file.</a></p>
+						<p class="fragment"><a style="color:green">Keep base EFI small, ship extras as sysext images</a></p>
+					</section>
+					<section>
+						We want to keep the private keys out as less time as possible.
+						<p class="fragment"><a style="color:red">Everytime you have to rebuild an image you have to sign it with your EFI keys + tpm keys, and we want to keep those offline as much time as possible.</a></p>
+						<p class="fragment"><a style="color:green">Sign sysexts with a different key, keep your other keys safe</a></p>
+					</section>
+					<section>
+						Rebuild a full image on small changes.
+						<br>
+						<p class="fragment"><a style="color:red">A patch release of k3s results in having to rebuild the full image and upgrade the OS.</a></p>
+						<p class="fragment"><a style="color:green">Only upgrade sysextension, keep OS on same version.</a></p>
+					</section>
+				</section>
+				<section>
+					<section>But what is a sys extension?</section>
+					<section>System extensions are a way to extend the system with additional files and directories that are mounted at boot time. System extension images may – dynamically at runtime — extend the /usr/ directory hierarchies with additional files</section>
+					<section>Basically a raw image that contain files and directories similar in fashion to regular operating system tree. When one or more system extension images are activated, their /usr/ hierarchies are combined via "overlayfs" with the same hierarchies of the host OS, and the host /usr/ overmounted with it ("merging")</section>
+				</section>
+				<section>
+					<section>Building sysextensions</section>
+					<section>Out of scope of this presentation, see <a href="https://kairos.io/docs/advanced/sys-extensions/#building-system-extensions">Building sysextensions</a> on Kairos docs</section>
+				</section>
+				<section>
+					<section>Verity + signed? what?</section>
+					<section>Quick simplified explanation: signed hash of the contents + signed partition. Allows to verify that partition was not modified since the creation of it.</section>
+					<section>Out of scope, see <a href="https://uapi-group.org/specifications/specs/discoverable_partitions_specification/#verity">DDI specification</a> and <a href="https://source.android.com/docs/security/features/verifiedboot/dm-verity">dm-verity docs</a> </section>				</section>
+				<section>
+					<section> How do I use it?
+						<p class="fragment"><a href="https://kairos.io/docs/advanced/sys-extensions/#building-system-extensions">Build a sysextension</a> </p>
+						<p class="fragment"><a href="https://kairos.io/docs/installation/trustedboot/#bundling-system-extensions-during-the-installable-medium-build">Add it to the installer iso</a></p>
+						<p class="fragment">Agent will copy it for active+passive entries</p>
+						<p class="fragment">Immucore will verify it on boot and enable if signature matches</p>
+						<p class="fragment">Systemd-sysext service will start and merge the extensions</p>
+					</section>
+				</section>
+				<section>
+					<section>Known issues/limitations</section>
+					<section>
+						Sysext images need to be named with the extension <a style="color:#FF0000">.sysext.raw</a> to be identified correctly.
+						<br>
+						This is a Kairos design choice to avoid conflicts with other files that could be present in the EFI partition and we don’t expect this to change in the future.
+					</section>
+					<section>
+						Any folder that is mounted as a system extension will be mounted as read-only.
+						<br>
+						So if your sysext is mounting <a style="color:blue">/usr/local/bin</a> to add binaries, it will be mounted as read-only.
+						<br>
+						Other sysexts can be added, and they will be merged correctly, but the final dir will be read-only.
+						<br>
+						This is a limitation of the current systemd version (lower than 256) and will be addressed in future releases.
+					</section>
+					<section>
+						Only <a style="color:blue">/usr</a> can be extended.
+						<br>
+						This is a Kairos design choice and might change in the future to allow other directories to be extended.
+					</section>
+					<section>
+						System extensions provided binaries are only available after the initramfs stage.
+					</section>
+					<section>
+						Any extensions bundled on the install media will be available in the active and passive boot entries.
+						<br>
+						Any other custom entries will need to have the sysexts copied manually to the proper directory in the EFI partition.
+					</section>
+					<section>
+						Recovery and autoreset boot entries have no extensions nor are planned to have.
+						<br>
+						This is a Kairos design choice to keep the recovery environment as minimal as possible without anything that could break it.
+					</section>
+					<section>
+						Currently only signed+verity sysexts are supported.
+					</section>
+					<section>
+						<a style="color:red">Sysexts need to be signed with the same key/cert as the ones used to sign the EFI files.</a>
+						<br>
+						As those are part of the system and available in the EFI firmware, we can extract the public part and verify the sysexts locally and any of the PK, KEK or DB keys can be used to sign sysexts.
+						<br>
+						This is planned to be expanded in the future to allow signing them with a different key/cert and provide the public keys as part of the install configuration so they can be verified.
+					</section>
+					<section>
+						Sysexts are mounted by the name order by trying to parse the name as a version and comparing it to others. This is done directly by systemd so be aware of the naming of your extensions and try to keep them in a versioned format
+						<pre><code data-trim data-noescape>
+							*  (older) 122.1
+							 *     ^    123~rc1-1
+							 *     |    123
+							 *     |    123-a
+							 *     |    123-a.1
+							 *     |    123-1
+							 *     |    123-1.1
+							 *     |    123^post1
+							 *     |    123.a-1
+							 *     |    123.1-1
+							 *     v    123a-1
+							 *  (newer) 124-1
+  						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						Extra stuff
+					</section>
+					<section>
+						Extensions can be added and removed manually. They are stored in the EFI partition (fat filesystem) so manual
+						managing of them can be done at any time. See <a href="https://kairos.io/docs/advanced/sys-extensions/#adding-system-extensions-to-the-installed-system">Kairos docs</a> for more info.
+					</section>
+					<section>
+						Nothing planned for managing those sysextension via kairos-agent. No download or managing of existing ones are planned yet.
+					</section>
+					<section>
+						Broken/unsigned sysextensions are still on the EFI partition, they just dont get copied and activated during runtime.
+						There are warning on immucore logs about this but nothing planned with them, no removal done of those.
+					</section>
+					<section>
+						On systemd 256, we will be able to make extension hierarchies mutable with a series of different ways.
+						This falls more in line with our current status of having /usr/local being mutable and persistent but we still need planning around it
+					</section>
+				</section>
+				<section>
+					Questions?
+				</section>
+				<section>Links
+					<ul>
+						<li>
+							<a href="https://kairos.io/docs/advanced/sys-extensions/">Kairos: Extending the system with sysextensions</a>
+						</li>
+						<li>
+							<a href="https://kairos.io/docs/architecture/trustedboot/">Kairos: Trusted Boot</a>
+						</li>
+						<li>
+							<a href="https://www.freedesktop.org/software/systemd/man/latest/systemd-sysext.html">Systemd-Sysext docs</a>
+						</li>
+						<li>
+							<a href="https://github.com/Itxaka/sysext-examples">Systemd-sysext examples (k3s,sbctl)</a>
+						</li>
+						<li>
+							<a href="https://github.com/flatcar/sysext-bakery">Systemd-sysext examples from Flatcar</a>
+						</li>
+					</ul>
+
+				</section>
+			</div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script>
+			Reveal.initialize({
+				hash: true,
+			});
+		</script>
+	</body>
+</html>
